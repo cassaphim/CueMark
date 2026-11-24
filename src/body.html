@@ -1,0 +1,149 @@
+<div id="app" data-format="film">
+  <header class="bar">
+    <button class="btn icon" id="b-side" type="button" aria-label="Show or hide the index" title="Index"><svg viewBox="0 0 16 16"><rect x="1.75" y="2.75" width="12.5" height="10.5" rx="2"/><path d="M6 2.75v10.5"/></svg></button>
+    <span class="mark">cuemark</span>
+    <button class="btn doc" id="b-title" type="button" title="Go to the title page"><span id="doc-name">Untitled script</span></button>
+    <span class="grow"></span>
+    <div class="seg" id="fmt" role="group" aria-label="Script format">
+      <button type="button" data-f="film" aria-pressed="true">Screenplay</button>
+      <button type="button" data-f="stage" aria-pressed="false">Stage play</button>
+    </div>
+    <button class="btn line keep" id="b-el" type="button" aria-haspopup="menu" title="Change what this line is"><i class="g" id="el-g"></i><span id="el-name">Action</span><svg viewBox="0 0 16 16"><path d="M4.5 6.5 8 10l3.5-3.5"/></svg></button>
+    <button class="btn icon keep" id="b-undo" type="button" aria-label="Undo" title="Undo"><svg viewBox="0 0 16 16"><path d="M5.5 2.75 2.5 5.75l3 3M2.5 5.75h6.75a3.75 3.75 0 0 1 0 7.5H7"/></svg></button>
+    <button class="btn icon keep" id="b-redo" type="button" aria-label="Redo" title="Redo"><svg viewBox="0 0 16 16"><path d="m10.5 2.75 3 3-3 3M13.5 5.75H6.75a3.75 3.75 0 0 0 0 7.5H9"/></svg></button>
+    <label class="switch" title="Show or hide character colors"><input type="checkbox" id="tags" checked><span>Tags</span></label>
+    <button class="btn solid" id="b-export" type="button">Export</button>
+    <button class="btn icon" id="b-more" type="button" aria-haspopup="menu" aria-label="More" title="More"><svg viewBox="0 0 16 16"><path d="M3.5 8h.01M8 8h.01M12.5 8h.01" stroke-width="2.4"/></svg></button>
+  </header>
+
+  <aside class="side" id="side" aria-label="Index">
+    <nav class="docnav">
+      <button type="button" data-go="title">Title page</button>
+      <button type="button" data-go="cast">Cast of characters <span id="cast-n"></span></button>
+    </nav>
+    <div class="side-h"><h2>Scenes<span id="scene-n"></span></h2><button class="btn sm line" id="b-scene" type="button">Add scene</button></div>
+    <div class="ix-wrap"><ol class="ix" id="ix"></ol></div>
+    <div class="castbar">
+      <div class="side-h"><h2>Cast</h2></div>
+      <div class="chips" id="chips"></div>
+    </div>
+  </aside>
+
+  <main class="stage" id="stage">
+    <div class="dock" id="dock" role="toolbar" aria-label="Downloads">
+      <button class="btn line" id="b-dl-app" type="button" title="Save this app as one HTML file that opens offline"><svg viewBox="0 0 16 16"><path d="M8 2.5v7.75M4.75 7 8 10.25 11.25 7M2.75 13.25h10.5"/></svg>Download software</button>
+      <button class="btn solid" id="b-dl-script" type="button" title="Save the script as a clean Courier PDF"><svg viewBox="0 0 16 16"><path d="M8 2.5v7.75M4.75 7 8 10.25 11.25 7M2.75 13.25h10.5"/></svg>Download script</button>
+    </div>
+    <section class="paper title" id="p-title" aria-label="Title page">
+      <div class="tp-main">
+        <input id="tp-title" placeholder="Title" aria-label="Title" autocomplete="off">
+        <div class="tp-rule" aria-hidden="true"></div>
+        <input id="tp-desc" placeholder="A Play in Two Acts" aria-label="Description line" autocomplete="off">
+        <input id="tp-credit" placeholder="Written by" aria-label="Credit line" autocomplete="off">
+        <input id="tp-author" placeholder="Your name" aria-label="Author" autocomplete="off">
+        <input id="tp-based" placeholder="Based on (optional)" aria-label="Based on" autocomplete="off">
+      </div>
+      <textarea id="tp-contact" placeholder="Email&#10;Phone" aria-label="Contact details"></textarea>
+      <input id="tp-draft" placeholder="Draft date (optional)" aria-label="Draft date" autocomplete="off">
+    </section>
+
+    <section class="paper cast" id="p-cast" aria-label="Cast of characters">
+      <h2 class="cast-h">Cast of Characters</h2>
+      <div id="cast-rows"></div>
+      <form class="cast-row add" id="cast-add" autocomplete="off">
+        <span class="sw" id="next-sw" aria-hidden="true"></span>
+        <div class="who"><input class="nm" id="add-name" placeholder="Character name" aria-label="New character name" spellcheck="false"><span>:</span></div>
+        <div class="ds-wrap"><input id="add-desc" placeholder="Age, role, a trait or two" aria-label="New character description"><button class="btn solid" type="submit">Add to cast</button></div>
+        <p class="cast-note aka">Each character gets a color of their own. It marks their name, their lines and every mention through the script, and it stays out of exports.</p>
+      </form>
+      <div class="cast-suggest" id="cast-suggest" hidden></div>
+      <div class="cast-meta">
+        <h3>Scene</h3>
+        <input id="cm-scene" placeholder="Where the play happens" aria-label="Scene" autocomplete="off">
+        <h3>Time</h3>
+        <input id="cm-time" placeholder="When it happens" aria-label="Time" autocomplete="off">
+      </div>
+    </section>
+
+    <section class="paper script" id="p-script" aria-label="Script">
+      <div id="script" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true" aria-label="Script"></div>
+      <div class="ticks" id="ticks" aria-hidden="true"></div>
+    </section>
+  </main>
+
+  <footer class="status">
+    <span class="now"><i class="g" id="st-g"></i><span id="st-el"></span></span>
+    <span class="next" id="st-next"></span>
+    <span class="grow"></span>
+    <span class="num" id="st-page"></span>
+    <span class="num" id="st-time"></span>
+    <span class="num" id="st-words"></span>
+    <span id="st-save"></span>
+    <span class="zoom"><button type="button" id="z-out" aria-label="Smaller page">−</button><output id="z-val">Fit</output><button type="button" id="z-in" aria-label="Larger page">+</button></span>
+  </footer>
+</div>
+
+<div class="menu" id="menu" role="menu" hidden></div>
+<div class="ac" id="ac" hidden></div>
+<div class="tip" id="tip" hidden></div>
+<div class="toast" id="toast" role="status" hidden></div>
+<input type="file" id="file" accept=".json,.txt,.fountain,application/json,text/plain" hidden>
+
+<dialog id="dlg-export" aria-labelledby="ex-h">
+  <div class="ex">
+    <div class="ex-side">
+      <h2 id="ex-h">Export</h2>
+      <p id="ex-sum"></p>
+      <label class="ck"><input type="checkbox" id="ex-title" checked><span>Title page</span></label>
+      <label class="ck"><input type="checkbox" id="ex-cast" checked><span>Cast of characters page</span></label>
+      <div class="ex-actions">
+        <button class="btn solid" id="ex-pdf" type="button">Download PDF</button>
+        <button class="btn line" id="ex-print" type="button">Print</button>
+        <button class="btn line" id="ex-txt" type="button">Download text file</button>
+        <button class="btn line" id="ex-copy" type="button">Copy script text</button>
+      </div>
+      <p id="ex-note" hidden></p>
+      <span class="grow"></span>
+      <button class="btn line" id="ex-close" type="button">Close</button>
+    </div>
+    <div class="ex-view" id="ex-view" tabindex="0" aria-label="Page preview"></div>
+  </div>
+</dialog>
+
+<dialog id="dlg-new" aria-labelledby="new-h">
+  <form class="dlg" method="dialog" id="new-form">
+    <h2 id="new-h">New script</h2>
+    <p>This replaces the script you have open. Save a project file first if you want to keep it.</p>
+    <fieldset>
+      <legend>Format</legend>
+      <label class="ck"><input type="radio" name="nf" id="nf-film" value="film" checked><span>Screenplay<small>Film layout: scene headings, action, dialogue, transitions</small></span></label>
+      <label class="ck"><input type="radio" name="nf" id="nf-stage" value="stage"><span>Stage play<small>Playscript layout: acts, scenes, setting, stage directions</small></span></label>
+    </fieldset>
+    <fieldset>
+      <legend>Start with</legend>
+      <label class="ck"><input type="radio" name="ns" id="ns-blank" value="blank" checked><span>A blank script</span></label>
+      <label class="ck"><input type="radio" name="ns" id="ns-sample" value="sample"><span>The example script</span></label>
+    </fieldset>
+    <div class="row"><button class="btn line" type="button" id="new-cancel">Cancel</button><button class="btn solid" type="submit">Start new script</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlg-keys" aria-labelledby="keys-h">
+  <div class="dlg">
+    <h2 id="keys-h">Writing shortcuts</h2>
+    <dl class="keys">
+      <dt>Right-click</dt><dd>Add a new element, or change what the current line is</dd>
+      <dt>Enter</dt><dd>Start the element that usually comes next</dd>
+      <dt>Tab</dt><dd>Switch an empty line, or add the usual alternative</dd>
+      <dt><span class="alt-key">Alt</span> + 1 to 9</dt><dd>Change the current line, in menu order</dd>
+      <dt>int. or ext.</dt><dd>Typed at the start of a line, becomes a scene heading</dd>
+      <dt>(</dt><dd>Typed first on a line inside a speech, becomes an acting direction</dd>
+      <dt><span class="mod-key">Ctrl</span> + B, I, U</dt><dd>Bold, italic, underline. Shown as marks here, set properly on export</dd>
+      <dt><span class="mod-key">Ctrl</span> + Z</dt><dd>Undo. Add Shift to redo</dd>
+      <dt>Shift + right-click</dt><dd>The browser's own menu, with spelling suggestions</dd>
+    </dl>
+    <div class="row"><button class="btn solid" type="button" id="keys-close">Done</button></div>
+  </div>
+</dialog>
+
+<div id="printroot"></div>
