@@ -14,7 +14,7 @@ This is a movie writing software based on Celtx
 
 ## Versions
 
-The current version shows in the app's top bar. [CHANGELOG.md](CHANGELOG.md) lists what changed in each one, and each version is also posted under [Releases](https://github.com/cassaphim/CueMark/releases).
+The current version shows in the app's top bar. [CHANGELOG.md](CHANGELOG.md) lists what changed in each one.
 
 ## Files
 

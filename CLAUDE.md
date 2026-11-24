@@ -12,5 +12,7 @@ CueMark is a screenwriting app that ships as one file, `index.html`.
 2. Run `./build.sh` and test.
 3. Commit and push `main`.
 4. Push the same commit to `gh-pages` (`git push origin main:gh-pages`). The live page, https://cassaphim.github.io/CueMark/, is served from that branch.
-5. Publish a GitHub release tagged `vX.Y.Z` with the changelog entry as its notes.
-6. Post an update summary to the owner: version, what changed, the commit, and the links.
+5. Post an update summary to the owner: version, what changed, the commit, and the links.
+
+The changelog entry and the commit message are the summary on GitHub. Releases and tags cannot be created from a Claude session; the owner can publish a release from the repo page if they want one.
+A change that leaves the app untouched (README, this file) needs no new version, but still gets a summary.
