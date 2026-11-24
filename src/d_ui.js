@@ -5,7 +5,7 @@ function toast(msg, action, color) {
   t.innerHTML = (color ? `<i style="--c:${esc(color)}"></i>` : '') + `<span>${esc(msg)}</span>` + (action ? `<button type="button">${esc(action.label)}</button>` : '');
   t.hidden = false;
   if (action) t.querySelector('button').onclick = () => { t.hidden = true; action.run(); };
-  clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, action ? 7000 : 3800);
+  clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, action ? 9000 : 3800);
 }
 function caretAt(x, y) {
   if (document.caretPositionFromPoint) { const p = document.caretPositionFromPoint(x, y); return p ? {node: p.offsetNode, offset: p.offset} : null; }
@@ -95,8 +95,8 @@ $('#b-redo').addEventListener('click', redo);
 $('#b-more').addEventListener('click', () => {
   if (justShut('more')) return;
   const r = $('#b-more').getBoundingClientRect(), other = P.format === 'film' ? 'stage' : 'film';
-  const it = (a, l) => `<button type="button" role="menuitem" data-act="${a}"><span class="lab">${l}</span></button>`;
-  openMenu(it('new', 'New script') + it('open', 'Open a project or text file') + it('save', 'Save a project file') + '<hr>' + it('fmt', 'Switch to ' + F[other].name.toLowerCase() + ' format') + it('keys', 'Writing shortcuts'),
+  const it = (a, l, hint) => `<button type="button" role="menuitem" data-act="${a}"><span class="lab">${l}</span>${hint ? `<span class="hint">${hint}</span>` : ''}</button>`;
+  openMenu(it('new', 'New script') + it('open', 'Open', 'Text, Word, Pages or project file') + it('save', 'Save a project file') + '<hr>' + it('fmt', 'Switch to ' + F[other].name.toLowerCase() + ' format') + it('keys', 'Shortcuts') + it('ver', 'Version history', 'v' + VERSION),
     r.right - 250, r.bottom + 6, {kind: 'more', owner: 'more', pick(b) {
       const a = b.dataset.act; closeMenu();
       if (a === 'new') $('#dlg-new').showModal();
@@ -104,10 +104,19 @@ $('#b-more').addEventListener('click', () => {
       else if (a === 'save') saveProjectFile();
       else if (a === 'fmt') switchFormat(other);
       else if (a === 'keys') $('#dlg-keys').showModal();
+      else if (a === 'ver') showVersions();
     }});
 });
 $('#fmt').addEventListener('click', e => { const b = e.target.closest('button'); if (b) switchFormat(b.dataset.f); });
 $('#keys-close').addEventListener('click', () => $('#dlg-keys').close());
+function showVersions() {
+  const day = d => { const m = String(d).match(/^(\d{4})-(\d\d)-(\d\d)$/); return m ? new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric'}) : d; };
+  $('#ver-list').innerHTML = LOG.map((v, i) => `<section><h3>${esc(v.v)}${i ? '' : '<em>this version</em>'}<span>${esc(day(v.date))}</span></h3><ul>${v.items.map(x => `<li>${esc(x)}</li>`).join('')}</ul></section>`).join('') || '<p>No history is recorded in this copy.</p>';
+  $('#dlg-ver').showModal();
+}
+$('#b-ver').textContent = 'v' + VERSION;
+$('#b-ver').addEventListener('click', showVersions);
+$('#ver-close').addEventListener('click', () => $('#dlg-ver').close());
 $$('.mod-key').forEach(n => { n.textContent = isMac ? 'Cmd' : 'Ctrl'; });
 $$('.alt-key').forEach(n => { n.textContent = isMac ? 'Option' : 'Alt'; });
 

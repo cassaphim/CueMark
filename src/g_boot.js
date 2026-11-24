@@ -102,6 +102,7 @@ document.addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
   if (k === 's') { e.preventDefault(); saveLocal(); if (cloud.on) cloudLater(0); toast(P.sample ? 'This is the example script. Your own work saves as you type.' : 'Your script saves as you type.'); }
   else if (k === 'e' && e.shiftKey) { e.preventDefault(); $('#b-export').click(); }
+  else if (k === 'o' && !e.shiftKey && !e.altKey) { e.preventDefault(); $('#file').click(); }
 });
 
 /* ---------- start ---------- */

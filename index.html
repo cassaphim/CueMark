@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="version" content="1.2.0">
 <title>CueMark Script Writer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -50,6 +51,8 @@ h2,h3,p{margin:0}
 .bar{grid-area:bar;display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--rule);min-width:0}
 .mark{font:700 17px/1 var(--type);margin:0 8px 0 4px;white-space:nowrap}
 .mark::after{content:"";display:inline-block;width:.42em;height:.42em;border-radius:50%;background:currentColor;vertical-align:.6em;margin-left:.12em}
+.ver{border:0;background:none;border-radius:5px;padding:2px 6px;margin:0 4px 0 -8px;color:var(--ink-3);font:500 12.5px/1.4 var(--ui-c);font-variant-numeric:tabular-nums;cursor:pointer}
+.ver:hover{background:var(--hover);color:var(--ink)}
 .doc{max-width:30ch;overflow:hidden;text-overflow:ellipsis;color:var(--ink-2)}
 .grow{flex:1 1 0;min-width:0}
 .btn{display:inline-flex;align-items:center;gap:7px;border:1px solid transparent;border-radius:7px;background:none;padding:6px 10px;line-height:1.2;cursor:pointer;white-space:nowrap}
@@ -269,6 +272,11 @@ dialog::backdrop{background:rgb(10 12 14/.45)}
 .ck{display:flex;align-items:flex-start;gap:8px;cursor:pointer;line-height:1.35}
 .ck input{margin:2px 0 0;accent-color:var(--ink)}
 .ck small{display:block;color:var(--ink-2);font-size:12.5px}
+.verlist{display:flex;flex-direction:column;gap:16px;max-height:min(56vh,440px);overflow:auto;padding-right:4px}
+.verlist h3{display:flex;align-items:baseline;gap:10px;margin:0 0 4px;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+.verlist h3 span{font-weight:400;font-size:12.5px;color:var(--ink-2)}
+.verlist h3 em{font-style:normal;font-weight:500;font-size:11.5px;border:1px solid var(--rule-2);border-radius:999px;padding:0 7px}
+.verlist ul{margin:0;padding-left:18px;color:var(--ink-2);line-height:1.5}
 .keys{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:13.5px;margin:0}
 .keys dt{font-weight:500;white-space:nowrap}
 .keys dd{margin:0;color:var(--ink-2)}
@@ -292,12 +300,12 @@ pre.pg u{text-decoration-thickness:1px;text-underline-offset:.12em}
   #app,#app.no-side{grid-template-columns:0 minmax(0,1fr)}
   .side,#app.no-side .side{display:flex;position:fixed;top:49px;bottom:0;left:0;width:min(300px,86vw);z-index:40;box-shadow:var(--shadow);transform:translateX(-104%);transition:transform .16s}
   #app.drawer .side{transform:none}
-  #fmt{display:none}
+  #fmt,#b-open{display:none}
   .status .next{display:none}
   #b-el{min-width:0}
 }
 @media (max-width:640px){
-  .mark,.switch span,#b-undo,#b-redo,#st-words,#st-time,.zoom{display:none}
+  .mark,.ver,.switch span,#b-undo,#b-redo,#st-words,#st-time,.zoom{display:none}
   .bar{padding:8px}
   .stage{padding:12px 8px 80px;font-size:14px!important}
   .dock{top:-12px;left:-8px;margin:-12px -8px 10px;padding:6px 8px;font-size:13px}
@@ -339,6 +347,7 @@ pre.pg u{text-decoration-thickness:1px;text-underline-offset:.12em}
   <header class="bar">
     <button class="btn icon" id="b-side" type="button" aria-label="Show or hide the index" title="Index"><svg viewBox="0 0 16 16"><rect x="1.75" y="2.75" width="12.5" height="10.5" rx="2"/><path d="M6 2.75v10.5"/></svg></button>
     <span class="mark">cuemark</span>
+    <button class="ver" id="b-ver" type="button" title="Version history"></button>
     <button class="btn doc" id="b-title" type="button" title="Go to the title page"><span id="doc-name">Untitled script</span></button>
     <span class="grow"></span>
     <div class="seg" id="fmt" role="group" aria-label="Script format">
@@ -349,6 +358,7 @@ pre.pg u{text-decoration-thickness:1px;text-underline-offset:.12em}
     <button class="btn icon keep" id="b-undo" type="button" aria-label="Undo" title="Undo"><svg viewBox="0 0 16 16"><path d="M5.5 2.75 2.5 5.75l3 3M2.5 5.75h6.75a3.75 3.75 0 0 1 0 7.5H7"/></svg></button>
     <button class="btn icon keep" id="b-redo" type="button" aria-label="Redo" title="Redo"><svg viewBox="0 0 16 16"><path d="m10.5 2.75 3 3-3 3M13.5 5.75H6.75a3.75 3.75 0 0 0 0 7.5H9"/></svg></button>
     <label class="switch" title="Show or hide character colors"><input type="checkbox" id="tags" checked><span>Tags</span></label>
+    <button class="btn line" id="b-open" type="button" title="Open a text, Word, Pages or project file">Open</button>
     <button class="btn solid" id="b-export" type="button">Export</button>
     <button class="btn icon" id="b-more" type="button" aria-haspopup="menu" aria-label="More" title="More"><svg viewBox="0 0 16 16"><path d="M3.5 8h.01M8 8h.01M12.5 8h.01" stroke-width="2.4"/></svg></button>
   </header>
@@ -424,7 +434,7 @@ pre.pg u{text-decoration-thickness:1px;text-underline-offset:.12em}
 <div class="ac" id="ac" hidden></div>
 <div class="tip" id="tip" hidden></div>
 <div class="toast" id="toast" role="status" hidden></div>
-<input type="file" id="file" accept=".json,.txt,.fountain,application/json,text/plain" hidden>
+<input type="file" id="file" accept=".txt,.fountain,.docx,.pages,.json,.md,text/plain,application/json,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.apple.pages" hidden>
 
 <dialog id="dlg-export" aria-labelledby="ex-h">
   <div class="ex">
@@ -469,6 +479,7 @@ pre.pg u{text-decoration-thickness:1px;text-underline-offset:.12em}
   <div class="dlg">
     <h2 id="keys-h">Writing shortcuts</h2>
     <dl class="keys">
+      <dt><span class="mod-key">Ctrl</span> + O</dt><dd>Open a text, Word, Pages or project file. Dropping a file on the window works too</dd>
       <dt>Right-click</dt><dd>Add a new element, or change what the current line is</dd>
       <dt>Enter</dt><dd>Start the element that usually comes next</dd>
       <dt>Tab</dt><dd>Switch an empty line, or add the usual alternative</dd>
@@ -483,7 +494,36 @@ pre.pg u{text-decoration-thickness:1px;text-underline-offset:.12em}
   </div>
 </dialog>
 
+<dialog id="dlg-ver" aria-labelledby="ver-h">
+  <div class="dlg">
+    <h2 id="ver-h">Version history</h2>
+    <div class="verlist" id="ver-list"></div>
+    <div class="row"><button class="btn solid" type="button" id="ver-close">Done</button></div>
+  </div>
+</dialog>
+
 <div id="printroot"></div>
+<script type="text/plain" id="changelog">
+# CueMark updates
+
+The first heading below is the current version. The app reads this file for its version number and its Version history window.
+
+## 1.2.0 (2026-11-23)
+- Open now reads Word (.docx), Apple Pages (.pages) and plain text files, and formats them into script elements as they come in
+- Speakers found in an opened script are added to the cast and color tagged
+- Opening a file can be undone, and a file can be dropped onto the window to open it
+- Version number in the top bar, with this history behind it
+- The downloaded app file carries its version in its name
+
+## 1.1.0 (2026-11-23)
+- Download software and Download script buttons, pinned to the top of the page area
+- Published on GitHub at cassaphim.github.io/CueMark
+
+## 1.0.0 (2026-11-22)
+- First build: screenplay and stage play formats with a right-click menu for every element
+- Cast of Characters page with a color for each character, marked through the script
+- Scene index that builds itself, clean Courier PDF export, title page
+</script>
 <script>
 (function () {
 'use strict';
@@ -491,14 +531,25 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const SELF = (() => {
   try {
-    const mine = ['app', 'menu', 'ac', 'tip', 'toast', 'file', 'dlg-export', 'dlg-new', 'dlg-keys', 'printroot'];
+    const mine = ['app', 'menu', 'ac', 'tip', 'toast', 'file', 'dlg-export', 'dlg-new', 'dlg-keys', 'dlg-ver', 'printroot'];   // every top-level element in body.html
     const head = Array.from(document.head.children).filter(n => n.tagName === 'META' || n.tagName === 'TITLE' || (n.tagName === 'LINK' && /fonts\.g/.test(n.href || ''))).map(n => n.outerHTML).join('\n');
-    return {head, css: $('#appcss').textContent, body: mine.map(id => document.getElementById(id).outerHTML).join('\n'), js: document.currentScript.textContent};
+    return {head, css: $('#appcss').textContent, body: mine.map(id => document.getElementById(id).outerHTML).join('\n'), log: document.getElementById('changelog').outerHTML, js: document.currentScript.textContent};
   } catch (e) { return null; }
 })();
+/* Versions: CHANGELOG.md is embedded in the page; its first "## x.y.z (date)" heading is the version running now. */
+const LOG = (() => {
+  const out = []; let cur = null;
+  for (const line of ($('#changelog') ? $('#changelog').textContent : '').split('\n')) {
+    const h = line.match(/^##\s+v?(\d[\d.]*)\s*(?:\((.*?)\))?/);
+    if (h) { cur = {v: h[1], date: h[2] || '', items: []}; out.push(cur); }
+    else if (cur && /^\s*[-*]\s+/.test(line)) cur.items.push(line.replace(/^\s*[-*]\s+/, ''));
+  }
+  return out;
+})();
+const VERSION = LOG.length ? LOG[0].v : '0';
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
 const rid = () => Math.random().toString(36).slice(2, 9);
-const clean = s => String(s == null ? '' : s).replace(/ /g, ' ').replace(/\s*[\r\n]+\s*/g, ' ');
+const clean = s => String(s == null ? '' : s).replace(/\u00a0/g, ' ').replace(/\s*[\r\n]+\s*/g, ' ');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
 const hosted = () => !!(window.claude && typeof window.claude.use === 'function');
@@ -658,7 +709,7 @@ function buildMatchers() {
   const keys = Array.from(M.by.keys());
   if (!keys.length) { M.ci = M.cs = null; return; }
   const rx = s => s.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&');
-  const cjk = /[぀-ヿ㐀-鿿가-힯]/;
+  const cjk = /[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]/;
   const pat = s => cjk.test(s) ? rx(s) : '(?<![\\p{L}\\p{N}])' + rx(s) + '(?![\\p{L}\\p{N}])';
   const byLen = (a, b) => b.length - a.length;
   M.ci = new RegExp(keys.slice().sort(byLen).map(pat).join('|'), 'giu');
@@ -733,11 +784,12 @@ function rebuildTags(now) {
 }
 function retagSoon() { clearTimeout(retagT); retagT = setTimeout(() => rebuildTags(true), 180); }
 
-function nextColor() {
-  const used = new Set(P.cast.map(c => String(c.color).toLowerCase()));
+function nextColor(cast) {
+  cast = cast || P.cast;
+  const used = new Set(cast.map(c => String(c.color).toLowerCase()));
   const free = PALETTE.find(p => !used.has(p));
   if (free) return free;
-  const h = (P.cast.length * 137.508) % 360, s = .62, l = .5;       // past the palette: walk the hue wheel by the golden angle
+  const h = (cast.length * 137.508) % 360, s = .62, l = .5;       // past the palette: walk the hue wheel by the golden angle
   const f = n => { const k = (n + h / 30) % 12, a = s * Math.min(l, 1 - l); return Math.round(255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)))).toString(16).padStart(2, '0'); };
   return '#' + f(0) + f(8) + f(4);
 }
@@ -955,7 +1007,7 @@ function fixRoot() {
 }
 function tidy(el) {
   const f = el.firstChild; if (!f) return;
-  if (f === el.lastChild && f.nodeType === 3 && !/[\n ]/.test(f.data)) return;
+  if (f === el.lastChild && f.nodeType === 3 && !/[\n\u00a0]/.test(f.data)) return;
   const s = getSelection(); let off = -1;
   if (s.rangeCount && el.contains(s.focusNode)) { const p = point(s.focusNode, s.focusOffset); if (p) off = p.off; }
   const x = clean(el.textContent); el.textContent = x;
@@ -1077,7 +1129,7 @@ function toast(msg, action, color) {
   t.innerHTML = (color ? `<i style="--c:${esc(color)}"></i>` : '') + `<span>${esc(msg)}</span>` + (action ? `<button type="button">${esc(action.label)}</button>` : '');
   t.hidden = false;
   if (action) t.querySelector('button').onclick = () => { t.hidden = true; action.run(); };
-  clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, action ? 7000 : 3800);
+  clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, action ? 9000 : 3800);
 }
 function caretAt(x, y) {
   if (document.caretPositionFromPoint) { const p = document.caretPositionFromPoint(x, y); return p ? {node: p.offsetNode, offset: p.offset} : null; }
@@ -1167,8 +1219,8 @@ $('#b-redo').addEventListener('click', redo);
 $('#b-more').addEventListener('click', () => {
   if (justShut('more')) return;
   const r = $('#b-more').getBoundingClientRect(), other = P.format === 'film' ? 'stage' : 'film';
-  const it = (a, l) => `<button type="button" role="menuitem" data-act="${a}"><span class="lab">${l}</span></button>`;
-  openMenu(it('new', 'New script') + it('open', 'Open a project or text file') + it('save', 'Save a project file') + '<hr>' + it('fmt', 'Switch to ' + F[other].name.toLowerCase() + ' format') + it('keys', 'Writing shortcuts'),
+  const it = (a, l, hint) => `<button type="button" role="menuitem" data-act="${a}"><span class="lab">${l}</span>${hint ? `<span class="hint">${hint}</span>` : ''}</button>`;
+  openMenu(it('new', 'New script') + it('open', 'Open', 'Text, Word, Pages or project file') + it('save', 'Save a project file') + '<hr>' + it('fmt', 'Switch to ' + F[other].name.toLowerCase() + ' format') + it('keys', 'Shortcuts') + it('ver', 'Version history', 'v' + VERSION),
     r.right - 250, r.bottom + 6, {kind: 'more', owner: 'more', pick(b) {
       const a = b.dataset.act; closeMenu();
       if (a === 'new') $('#dlg-new').showModal();
@@ -1176,10 +1228,19 @@ $('#b-more').addEventListener('click', () => {
       else if (a === 'save') saveProjectFile();
       else if (a === 'fmt') switchFormat(other);
       else if (a === 'keys') $('#dlg-keys').showModal();
+      else if (a === 'ver') showVersions();
     }});
 });
 $('#fmt').addEventListener('click', e => { const b = e.target.closest('button'); if (b) switchFormat(b.dataset.f); });
 $('#keys-close').addEventListener('click', () => $('#dlg-keys').close());
+function showVersions() {
+  const day = d => { const m = String(d).match(/^(\d{4})-(\d\d)-(\d\d)$/); return m ? new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric'}) : d; };
+  $('#ver-list').innerHTML = LOG.map((v, i) => `<section><h3>${esc(v.v)}${i ? '' : '<em>this version</em>'}<span>${esc(day(v.date))}</span></h3><ul>${v.items.map(x => `<li>${esc(x)}</li>`).join('')}</ul></section>`).join('') || '<p>No history is recorded in this copy.</p>';
+  $('#dlg-ver').showModal();
+}
+$('#b-ver').textContent = 'v' + VERSION;
+$('#b-ver').addEventListener('click', showVersions);
+$('#ver-close').addEventListener('click', () => $('#dlg-ver').close());
 $$('.mod-key').forEach(n => { n.textContent = isMac ? 'Cmd' : 'Ctrl'; });
 $$('.alt-key').forEach(n => { n.textContent = isMac ? 'Option' : 'Alt'; });
 
@@ -1786,7 +1847,7 @@ function makePDF(pages, meta) {
   }
   objs[0] = '<< /Type /Catalog /Pages 2 0 R >>';
   objs[1] = `<< /Type /Pages /Kids [${kids.map(k => k + ' 0 R').join(' ')}] /Count ${kids.length} >>`;
-  const info = add(`<< /Title (${pdfStr(meta.title)}) /Author (${pdfStr(meta.author)}) /Creator (CueMark) >>`);
+  const info = add(`<< /Title (${pdfStr(meta.title)}) /Author (${pdfStr(meta.author)}) /Creator (CueMark ${VERSION}) >>`);
   let out = '%PDF-1.4\n'; const offs = [];
   objs.forEach((o, i) => { offs.push(out.length); out += `${i + 1} 0 obj\n${o}\nendobj\n`; });
   const xref = out.length;
@@ -1835,48 +1896,6 @@ function flowText(blocks) {
 }
 function scriptText() { const b = H.stack[H.i].b; return P.format === 'film' ? fountain(b) : flowText(b); }
 
-/* Read pasted or opened text into formatted lines. */
-function parseText(txt, fk) {
-  const lines = String(txt).replace(/\r\n?/g, '\n').split('\n'), out = [];
-  const push = (t, x) => { x = clean(x).trim(); if (x) out.push({t, x}); };
-  const caps = s => /[A-Z]/.test(s) && !/[a-z]/.test(s.replace(/\(.*?\)/g, ''));
-  if (fk === 'stage') {
-    let open = false;
-    for (let i = 0; i < lines.length; i++) {
-      const s = lines[i].trim(), last = out[out.length - 1];
-      if (!s) { open = false; continue; }
-      if (/^act\b/i.test(s) && s.length < 24) push('act', s);
-      else if (/^scene\b/i.test(s) && s.length < 24) push('scene', s);
-      else if (/^setting:/i.test(s)) push('setting', s.slice(8));
-      else if (/^at rise:/i.test(s)) push('atrise', s.slice(8));
-      else if (/^\(.*\)$/.test(s)) push(last && last.t === 'character' ? 'paren' : 'direction', s.slice(1, -1));
-      else if (caps(s) && s.length < 40) push('character', s);
-      else if (open && last && last.t === 'dialogue') { last.x += ' ' + s; continue; }
-      else { push('dialogue', s); open = true; continue; }
-      open = false;
-    }
-    return out;
-  }
-  let i = 0, inDlg = false, buf = [];
-  if (/^(title|credit|author|authors|source|draft date|contact|copyright)\s*:/i.test(lines[0] || '')) while (i < lines.length && lines[i].trim()) i++;
-  const flush = () => { if (buf.length) { push('action', buf.join(' ')); buf = []; } };
-  for (; i < lines.length; i++) {
-    const s = lines[i].trim(), prevBlank = i === 0 || !lines[i - 1].trim(), nextFull = !!(lines[i + 1] || '').trim(), last = out[out.length - 1];
-    if (!s) { flush(); inDlg = false; continue; }
-    if (inDlg) { if (/^\(.*\)$/.test(s)) push('paren', s.slice(1, -1)); else if (last && last.t === 'dialogue') last.x += ' ' + s; else push('dialogue', s); continue; }
-    const note = s.match(/^\[\[(.*)\]\]$/);
-    if (note) { flush(); push('note', note[1]); }
-    else if (prevBlank && /^(INT|EXT|EST|I\/E|INT\.?\/EXT\.?)[. ]/i.test(s)) { flush(); push('scene', s); }
-    else if (prevBlank && /^\.[^.]/.test(s)) { flush(); push('scene', s.slice(1)); }
-    else if (/^>/.test(s) && !/<$/.test(s)) { flush(); push('transition', s.slice(1)); }
-    else if (prevBlank && !nextFull && caps(s) && (/TO:$/.test(s) || /^FADE (IN|OUT|TO BLACK)[.:]?$/.test(s))) { flush(); push('transition', s); }
-    else if (prevBlank && nextFull && !/^!/.test(s) && (/^@/.test(s) || (caps(s) && s.length < 45))) { flush(); push('character', s.replace(/^@/, '').replace(/\s*\^$/, '')); inDlg = true; }
-    else buf.push(s.replace(/^!/, ''));
-  }
-  flush();
-  return out;
-}
-
 /* ---------- saving files ---------- */
 let DL = null, dlAsked = null;
 const downloads = () => dlAsked || (dlAsked = cap('downloads').then(d => (DL = d)));
@@ -1897,34 +1916,20 @@ async function saveFile(name, data, mime) {
   setTimeout(() => URL.revokeObjectURL(url), 4000);
   toast('Saved ' + name + '.');
 }
-function projectJSON() { return Object.assign({}, P, {app: 'cuemark', blocks: H.stack[H.i].b.map(b => ({t: b.t, x: b.x}))}); }
+function projectJSON() { return Object.assign({}, P, {app: 'cuemark', appVersion: VERSION, blocks: H.stack[H.i].b.map(b => ({t: b.t, x: b.x}))}); }
 function saveProjectFile() { saveFile(fileStem() + '.cuemark.json', JSON.stringify(projectJSON(), null, 1), 'application/json'); }
-$('#file').addEventListener('change', async e => {
-  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
-  let txt = ''; try { txt = await f.text(); } catch (err) { return toast('That file could not be read.'); }
-  let p = null; try { p = JSON.parse(txt); } catch (err) { p = null; }
-  if (p && Array.isArray(p.blocks)) { p.sample = false; p.updatedAt = Date.now(); loadProject(p); touch(); return toast('Opened ' + f.name + '.'); }
-  if (p) return toast('That file is not a CueMark project.');
-  const blocks = parseText(txt, 'film');
-  if (!blocks.length) return toast('No script text was found in that file.');
-  const np = blank('film'); np.blocks = blocks; np.title.title = f.name.replace(/\.[^.]+$/, '').replace(/\.fountain$/i, '');
-  const m = txt.match(/^title:\s*(.+)$/im), a = txt.match(/^authors?:\s*(.+)$/im);
-  if (m) np.title.title = m[1].trim(); if (a) np.title.author = a[1].trim();
-  loadProject(np); touch(); toast('Opened ' + f.name + ' as a screenplay.');
-});
-
 /* ---------- the two pinned downloads ---------- */
 async function appSource() {
   if (!hosted() && /^https?:$/.test(location.protocol)) {             // on a web host, hand over the exact file being served
     try { const r = await fetch(location.href.split(/[?#]/)[0], {cache: 'no-store'}); const t = r.ok ? await r.text() : ''; if (t.indexOf('id="appcss"') > 0) return t; } catch (e) { /* fall through to the copy taken at load */ }
   }
   if (!SELF) return '';
-  return '<!DOCTYPE html>\n<html lang="en">\n<head>\n' + SELF.head + '\n<style id="appcss">' + SELF.css + '</style>\n<style id="tagcss"></style>\n</head>\n<body>\n' + SELF.body + '\n<script>' + SELF.js + '<\/script>\n</body>\n</html>\n';
+  return '<!DOCTYPE html>\n<html lang="en">\n<head>\n' + SELF.head + '\n<style id="appcss">' + SELF.css + '</style>\n<style id="tagcss"></style>\n</head>\n<body>\n' + SELF.body + '\n' + SELF.log + '\n<script>' + SELF.js + '<\/script>\n</body>\n</html>\n';
 }
 $('#b-dl-app').addEventListener('click', async () => {
   const src = await appSource();
   if (!src) return toast('The app file could not be put together here.');
-  saveFile('CueMark.html', src, 'text/html');
+  saveFile('CueMark-' + VERSION + '.html', src, 'text/html');
 });
 $('#b-dl-script').addEventListener('click', () => {
   const pages = allPages($('#ex-title').checked, $('#ex-cast').checked);
@@ -1964,6 +1969,328 @@ $('#ex-print').addEventListener('click', () => {
   $('#printroot').innerHTML = exPages.map(pg => '<pre class="pg">' + pageRows(pg, true).join('\n') + '</pre>').join('');
   try { window.print(); } catch (e) { toast('Printing is not available here. Download the PDF instead.'); }
 });
+/* ---------- Open: read a text, Word or Pages file and format it as a script ---------- */
+const SCENE_RE = /^(\d+[A-Z]?[.)]?\s+)?(INT\.?\s*\/\s*EXT\.?|EXT\.?\s*\/\s*INT\.?|I\/E\.?|INT\.?|EXT\.?|EST\.?)[\s.]/i;
+const SUB_RE = /^(LATER|MOMENTS LATER|A MOMENT LATER|CONTINUOUS|SAME TIME|BACK TO SCENE\.?|BACK TO PRESENT\.?|INTERCUT.*|MONTAGE.*|SERIES OF SHOTS.*|END (OF )?MONTAGE\.?|FLASHBACK.*|END (OF )?FLASHBACK\.?|DREAM SEQUENCE.*|SUPER:.*|TITLE CARD:.*|THE END\.?)$/;
+const STYLE_MAP = [[/\baction\b|description/, 'action'], [/scene|slug/, 'scene'], [/parenthetical|wryly/, 'paren'], [/character|speaker|\bcue\b/, 'character'], [/dialog/, 'dialogue'], [/transition/, 'transition'], [/\bshot\b/, 'shot']];
+const allCaps = s => /\p{Lu}/u.test(s) && !/\p{Ll}/u.test(s.replace(/\([^)]*\)/g, ''));
+const userErr = msg => Object.assign(new Error(msg), {user: true});
+
+/* A record is one paragraph as found: {x: text, ind: left indent in inches, al: 'c' | 'r' | '', st: style name, gap: blank line before}. */
+function stageBlocks(recs) {
+  const out = [], push = (t, x) => { x = clean(x).trim(); if (x) out.push({t, x}); };
+  let open = false;
+  for (const r of recs) {
+    const x = r.x, last = out[out.length - 1]; let m;
+    if (r.gap) open = false;
+    if (/^act\b/i.test(x) && x.length < 24) push('act', x);
+    else if (/^scene\b/i.test(x) && x.length < 24) push('scene', x);
+    else if ((m = x.match(/^setting\s*:\s*(.*)$/i))) push('setting', m[1]);
+    else if ((m = x.match(/^at rise\s*:\s*(.*)$/i))) push('atrise', m[1]);
+    else if (/^\(.*\)$/.test(x)) push(last && last.t === 'character' ? 'paren' : 'direction', x.slice(1, -1));
+    else if ((m = x.match(/^(\p{Lu}[\p{Lu}\d .'#&-]{1,28}?)(\s*\([^)]*\))?:\s+(\S.*)$/u))) { push('character', m[1]); if (m[2]) push('paren', m[2].trim().slice(1, -1)); push('dialogue', m[3]); open = true; continue; }
+    else if (allCaps(x) && x.length < 40) push('character', x);
+    else if (open && last && last.t === 'dialogue') { last.x += ' ' + x; continue; }
+    else { push('dialogue', x); open = true; continue; }
+    open = false;
+  }
+  return out;
+}
+
+function filmBlocks(recs) {
+  const out = [], push = (t, x) => { x = clean(x).trim(); if (x) out.push({t, x}); };
+  const tally = new Map();
+  for (const r of recs) { const v = Math.round((r.ind || 0) * 10) / 10; tally.set(v, (tally.get(v) || 0) + 1); }
+  const need = Math.max(2, recs.length * 0.05), levels = Array.from(tally.keys()).sort((a, b) => a - b);
+  const hit = levels.find(v => tally.get(v) >= need), base = hit !== undefined ? hit : (levels[0] || 0);         // the left margin that action and headings share
+  const shaped = recs.filter(r => (r.ind || 0) - base >= 1 || r.al === 'c').length;
+  const layout = shaped >= Math.max(2, recs.length * 0.03);                      // the file carries indents or centering we can trust
+  const blankless = recs.filter(r => r.gap).length < recs.length * 0.1;
+  const labels = new Map();
+  for (const r of recs) { const m = r.x.match(/^([^:]{2,30}):\s+\S/); if (m) labels.set(m[1].toUpperCase(), (labels.get(m[1].toUpperCase()) || 0) + 1); }
+  let speech = 0;                                                               // 0 none, 1 just after a cue or acting direction, 2 inside the lines
+  for (let i = 0; i < recs.length; i++) {
+    const r = recs[i], nx = recs[i + 1], x = r.x, U = x.toUpperCase(), cap = allCaps(x), rel = (r.ind || 0) - base; let m;
+    if (r.gap && !layout) speech = 0;
+    if ((m = x.match(/^\[\[(.*)\]\]$/))) { push('note', m[1]); speech = 0; continue; }
+    const named = r.st ? (STYLE_MAP.find(([re]) => re.test(r.st.toLowerCase())) || [])[1] : '';
+    if (named) {
+      push(named, named === 'paren' ? x.replace(/^\(\s*/, '').replace(/\s*\)$/, '') : x);
+      speech = named === 'character' || named === 'paren' ? 1 : named === 'dialogue' ? 2 : 0; continue;
+    }
+    if (SCENE_RE.test(x) && x.length < 90 && !/[a-z]{3,}[.!?]$/.test(x)) {
+      const n = x.match(/^(\d+[A-Z]?)[.)]?\s+/); let h = n ? x.slice(n[0].length) : x;
+      if (n && h.slice(-n[1].length - 1) === ' ' + n[1]) h = h.slice(0, -n[1].length - 1);
+      push('scene', h); speech = 0; continue;
+    }
+    if (/^\.[^.\s]/.test(x)) { push('scene', x.slice(1)); speech = 0; continue; }
+    if (/^>/.test(x) && !/<$/.test(x)) { push('transition', x.slice(1)); speech = 0; continue; }
+    if (cap && x.length < 40 && (/\bTO:$/.test(U) || /^FADE (IN|OUT|TO BLACK|TO WHITE)[.:]?$/.test(U) || /^(CUT TO BLACK|SMASH CUT|FREEZE FRAME)[.:]?$/.test(U) || r.al === 'r' || rel >= 3.4)) { push('transition', x); speech = 0; continue; }
+    if (/^\(.+\)$/.test(x) && speech) { push('paren', x.slice(1, -1)); speech = 1; continue; }
+    if ((m = x.match(/^([^:]{2,30}?)(\s*\([^)]*\))?:\s+(\S.*)$/)) && !SCENE_RE.test(x) &&
+        (allCaps(m[1]) ? /^[\p{Lu}\d .'#&-]+$/u.test(m[1]) : labels.get(m[1].toUpperCase()) >= 3 && m[1].split(/\s+/).length <= 3)) {
+      push('character', m[1] + (m[2] || '')); push('dialogue', m[3]); speech = 0; continue;         // "NORA: Keep up, kid."
+    }
+    const cueLike = cap && x.length <= 40 && x.split(/\s+/).length <= 5 && !/[!?,]$/.test(x) && !SUB_RE.test(U) && nx && !SCENE_RE.test(nx.x);
+    if (/^@/.test(x) || (cueLike && (layout ? (r.al === 'c' || rel >= 1.2) : ((!nx.gap && !allCaps(nx.x)) || /^\(.+\)$/.test(nx.x))))) {
+      push('character', x.replace(/^@/, '').replace(/\s*\^$/, '')); speech = 1; continue;
+    }
+    if (speech && (layout ? (rel >= 0.4 || (speech === 1 && !cap)) : (speech === 1 || !blankless))) { push('dialogue', x); speech = 2; continue; }
+    speech = 0;
+    if (cap && x.length < 50 && SUB_RE.test(U)) { push('sub', x); continue; }
+    push('action', x.replace(/^!/, ''));
+  }
+  return out;
+}
+
+/* Pull a title and author off the front of the file, when the first lines read like a title page. */
+function splitTitle(recs, title) {
+  const first = recs.findIndex(r => SCENE_RE.test(r.x) || /^FADE IN:?$/i.test(r.x));
+  const head = recs.slice(0, first < 0 ? Math.min(recs.length, 8) : Math.min(first, 16));
+  const by = head.findIndex(r => /^((written|screenplay|teleplay|story|a (screen)?play)\s+)?by\b/i.test(r.x) && r.x.length < 80);
+  const line = by > 0 ? head[by].x : '', rest = line.replace(/^.*?\bby\b[\s:]*/i, '');
+  if (by > 0 && by <= 4 && head.slice(0, by).map(r => r.x).join(' ').length <= 80 && rest.split(/\s+/).length <= 6 && !/[.!?]$/.test(rest)) {
+    title.title = head.slice(0, by).map(r => r.x).join(' ').slice(0, 120);
+    title.credit = rest ? line.slice(0, line.length - rest.length).trim() : line;
+    title.author = rest || (head[by + 1] ? head[by + 1].x : '');
+    return recs.slice(first >= 0 ? first : by + (rest ? 1 : 2));
+  }
+  if (first > 0 && first <= 6 && head[0].al === 'c') { title.title = head[0].x; return recs.slice(first); }
+  return recs;
+}
+
+function autoFormat(recs, opt) {
+  opt = opt || {};
+  const title = Object.assign({}, opt.title), junk = /^(\d{1,3}\.?|\(?(MORE|CONTINUED)\)?:?|CONTINUED:?\s*(\(\d+\))?)$/i, kept = [];
+  let carry = false;
+  for (const r of recs) { if (!r.x || junk.test(r.x)) { carry = carry || r.gap || !r.x; continue; } kept.push(carry && !r.gap ? Object.assign({}, r, {gap: true}) : r); carry = false; }
+  const stage = opt.force ? opt.force === 'stage' : kept.some(r => /^(ACT\s+([IVXL]+|\d+|ONE|TWO|THREE|FOUR|FIVE)\b.{0,12}$|AT RISE\s*:|SETTING\s*:)/i.test(r.x));
+  const body = opt.keepTitle ? kept : splitTitle(kept, title);
+  return {format: stage ? 'stage' : 'film', blocks: stage ? stageBlocks(body) : filmBlocks(body), title};
+}
+
+/* Plain text: Fountain, a typed-out script, or a text export that lays the page out with spaces. */
+function textRecs(txt) {
+  const lines = String(txt).replace(/\r\n?/g, '\n').replace(/\f/g, '\n').split('\n'), recs = [], title = {};
+  let i = 0, gap = true;
+  if (/^(title|credit|author|authors|source|draft date|contact|copyright)\s*:/i.test(lines[0] || '')) {              // Fountain title page
+    const keys = {title: 'title', credit: 'credit', author: 'author', authors: 'author', source: 'based', 'draft date': 'draft', contact: 'contact'};
+    let k = '';
+    for (; i < lines.length && lines[i].trim(); i++) {
+      const m = /^\s/.test(lines[i]) ? null : lines[i].match(/^([A-Za-z ]+):\s*(.*)$/);
+      if (m) k = keys[m[1].toLowerCase()] || '';
+      const v = (m ? m[2] : lines[i]).trim();
+      if (k && v) title[k] = title[k] ? title[k] + (k === 'contact' ? '\n' : ' ') + v : v;
+    }
+  }
+  const blanks = lines.filter(l => !l.trim()).length, wrapped = blanks > lines.length * 0.12;
+  const prose = s => /\p{Ll}/u.test(s) && !/^\(.*\)$/.test(s) && !/^[@>.]/.test(s);
+  for (; i < lines.length; i++) {
+    const raw = lines[i].replace(/\t/g, '     ').replace(/\s+$/, ''), x = raw.trim();
+    if (!x) { gap = true; continue; }
+    const ind = (raw.length - raw.trimStart().length) / 10, prev = recs[recs.length - 1];
+    if (wrapped && prev && !gap && Math.abs(prev.ind - ind) < 0.15 && prose(prev.x) && !allCaps(x) && !/^[(\[>.@!]/.test(x) && !SCENE_RE.test(x)) prev.x += ' ' + x;   // a hard-wrapped line belongs to the paragraph above
+    else recs.push({x, ind, al: '', st: '', gap});
+    gap = false;
+  }
+  return {recs, title};
+}
+/* Pasted text goes through the same formatter, in the format already open. */
+function parseText(txt, fk) { return autoFormat(textRecs(txt).recs, {force: fk, keepTitle: true}).blocks; }
+
+/* ---- zip (Word and Pages files are zip packages) ---- */
+async function inflate(u8) {
+  const s = new Blob([u8]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return new Uint8Array(await new Response(s).arrayBuffer());
+}
+async function unzip(buf, want) {
+  const u = new Uint8Array(buf), dv = new DataView(u.buffer, u.byteOffset, u.byteLength), td = new TextDecoder(), out = new Map();
+  let e = u.length - 22;
+  while (e >= 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+  if (e < 0) throw new Error('not a zip');
+  const n = dv.getUint16(e + 10, true); let p = dv.getUint32(e + 16, true);
+  for (let i = 0; i < n && p + 46 <= u.length && dv.getUint32(p, true) === 0x02014b50; i++) {
+    const method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true), nlen = dv.getUint16(p + 28, true), xlen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true), at = dv.getUint32(p + 42, true);
+    const name = td.decode(u.subarray(p + 46, p + 46 + nlen));
+    if (want(name)) {
+      const start = at + 30 + dv.getUint16(at + 26, true) + dv.getUint16(at + 28, true), data = u.subarray(start, start + csize);
+      out.set(name, method === 0 ? data : await inflate(data));
+    }
+    p += 46 + nlen + xlen + clen;
+  }
+  return out;
+}
+
+/* ---- Word .docx ---- */
+function docxRecs(files) {
+  const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+  const xml = b => new DOMParser().parseFromString(new TextDecoder().decode(b), 'application/xml');
+  const kid = (el, name) => { if (el) for (const c of el.children) if (c.localName === name) return c; return null; };
+  const at = (el, name) => el ? (el.getAttributeNS(W, name) || el.getAttribute('w:' + name) || '') : '';
+  const on = el => !!el && !/^(0|false|off)$/i.test(at(el, 'val'));
+  const props = pPr => { const ind = kid(pPr, 'ind'), jc = at(kid(pPr, 'jc'), 'val'), o = {};
+    if (ind) { const l = at(ind, 'left') || at(ind, 'start'); if (l !== '') o.ind = (parseFloat(l) || 0) / 1440; const f = parseFloat(at(ind, 'firstLine')); if (f) o.first = f / 1440; }
+    if (jc) o.al = /center/i.test(jc) ? 'c' : /right|end/i.test(jc) ? 'r' : '';
+    return o; };
+  const styles = new Map(); let normal = '';
+  if (files.has('word/styles.xml')) for (const s of xml(files.get('word/styles.xml')).getElementsByTagNameNS(W, 'style')) {
+    if (at(s, 'type') && at(s, 'type') !== 'paragraph') continue;
+    const o = props(kid(s, 'pPr')); o.name = at(kid(s, 'name'), 'val'); o.base = at(kid(s, 'basedOn'), 'val');
+    const rp = kid(s, 'rPr'); if (rp && kid(rp, 'caps')) o.caps = on(kid(rp, 'caps'));
+    styles.set(at(s, 'styleId'), o);
+    if (at(s, 'default') && !/^(0|false|off)$/i.test(at(s, 'default'))) normal = at(s, 'styleId');
+  }
+  const resolve = id => { const o = {}; for (let n = 0, s = styles.get(id); s && n < 12; n++, s = styles.get(s.base)) for (const k of ['ind', 'first', 'al', 'caps']) if (o[k] === undefined && s[k] !== undefined) o[k] = s[k]; return o; };
+  const recs = []; let gap = true;
+  const doc = xml(files.get('word/document.xml'));
+  for (const p of doc.getElementsByTagNameNS(W, 'p')) {
+    let up = p.parentNode, nested = false;
+    for (; up && up.nodeType === 1; up = up.parentNode) if (up.localName === 'p' || up.localName === 'Fallback') { nested = true; break; }
+    if (nested) continue;
+    const pPr = kid(p, 'pPr'), sid = at(kid(pPr, 'pStyle'), 'val') || normal, st = styles.get(sid), base = resolve(sid), own = props(pPr);
+    let text = '', capLen = 0, len = 0;
+    const walk = (node, caps) => { for (const c of node.children) { const ln = c.localName;
+      if (ln === 'p' || ln === 'Fallback' || ln === 'pPr' || ln === 'rPr' || ln === 'del') continue;
+      if (ln === 't') { text += c.textContent; len += c.textContent.length; if (caps) capLen += c.textContent.length; }
+      else if (ln === 'tab') text += '\t';
+      else if (ln === 'br' || ln === 'cr') text += '\n';
+      else if (ln === 'noBreakHyphen') text += '-';
+      else if (ln === 'r') { const rp = kid(c, 'rPr'), cp = rp && kid(rp, 'caps'); walk(c, cp ? on(cp) : caps); }
+      else walk(c, caps); } };
+    walk(p, !!base.caps);
+    const ind0 = (own.ind !== undefined ? own.ind : base.ind || 0) + (own.first !== undefined ? own.first : base.first || 0), al = own.al !== undefined ? own.al : base.al || '';
+    const caps = len > 0 && capLen === len, name = st && st.name && !/^(normal|default|body text|standard|text body)/i.test(st.name) ? st.name : '';
+    for (const part of text.split('\n')) {
+      const lead = (part.match(/^[\t ]*/) || [''])[0], x = part.trim();
+      if (!x) { gap = true; continue; }
+      const tabs = (lead.match(/\t/g) || []).length;
+      recs.push({x: (caps ? x.toUpperCase() : x).replace(/\t+/g, ' '), ind: Math.max(0, ind0) + tabs * 0.5 + (lead.length - tabs) * 0.08, al, st: name, gap}); gap = false;
+    }
+  }
+  return {recs, title: {}};
+}
+
+/* ---- Apple Pages: zip of Snappy-compressed protobuf archives; the text sits in TSWP storage messages ---- */
+function unsnap(src) {
+  let p = 0, len = 0, mul = 1, b;
+  do { b = src[p++]; len += (b & 127) * mul; mul *= 128; } while (b & 128);
+  const out = new Uint8Array(len); let o = 0;
+  while (p < src.length && o < len) {
+    const tag = src[p++], kind = tag & 3;
+    if (kind === 0) {
+      let n = tag >> 2;
+      if (n >= 60) { const k = n - 59; n = 0; for (let i = 0; i < k; i++) n += src[p++] * Math.pow(256, i); }
+      n += 1; out.set(src.subarray(p, p + n), o); p += n; o += n;
+    } else {
+      let n, off;
+      if (kind === 1) { n = ((tag >> 2) & 7) + 4; off = ((tag >> 5) << 8) | src[p++]; }
+      else if (kind === 2) { n = (tag >> 2) + 1; off = src[p] | (src[p + 1] << 8); p += 2; }
+      else { n = (tag >> 2) + 1; off = (src[p] | (src[p + 1] << 8) | (src[p + 2] << 16)) + src[p + 3] * 16777216; p += 4; }
+      if (!off || off > o) throw new Error('bad snappy copy');
+      for (let i = 0; i < n; i++, o++) out[o] = out[o - off];
+    }
+  }
+  return out;
+}
+function iwaBytes(u) {
+  const parts = []; let total = 0;
+  for (let p = 0; p + 4 <= u.length;) { const n = u[p + 1] | (u[p + 2] << 8) | (u[p + 3] << 16), c = unsnap(u.subarray(p + 4, p + 4 + n)); parts.push(c); total += c.length; p += 4 + n; }
+  const out = new Uint8Array(total); let o = 0;
+  for (const c of parts) { out.set(c, o); o += c.length; }
+  return out;
+}
+function varint(u, p) { let r = 0, mul = 1, b; do { b = u[p++]; r += (b & 127) * mul; mul *= 128; } while (b & 128 && p < u.length); return [r, p]; }
+function pbEach(u, each) {
+  for (let p = 0; p < u.length;) {
+    let key, n; [key, p] = varint(u, p);
+    const f = Math.floor(key / 8), w = key % 8;
+    if (w === 0) { [n, p] = varint(u, p); each(f, 0, n); }
+    else if (w === 2) { [n, p] = varint(u, p); each(f, 2, u.subarray(p, p + n)); p += n; }
+    else if (w === 5) p += 4; else if (w === 1) p += 8; else return;
+  }
+}
+function iwaStorages(u, out) {
+  const td = new TextDecoder();
+  for (let p = 0; p < u.length;) {
+    let n; [n, p] = varint(u, p);
+    if (!n || p + n > u.length) return;
+    const msgs = [];
+    pbEach(u.subarray(p, p + n), (f, w, v) => { if (f === 2 && w === 2) { const m = {type: 0, len: 0}; pbEach(v, (g, w2, x) => { if (w2 === 0 && g === 1) m.type = x; else if (w2 === 0 && g === 3) m.len = x; }); msgs.push(m); } });
+    p += n;
+    for (const m of msgs) {
+      if (m.type === 2001 || m.type === 2005) {                                   // TSWP.StorageArchive: kind = field 1 (0 is the body), text = field 3
+        let kind = 3; const text = [];
+        pbEach(u.subarray(p, p + m.len), (f, w, v) => { if (f === 1 && w === 0) kind = v; else if (f === 3 && w === 2) text.push(td.decode(v)); });
+        out.push({kind, text: text.join('')});
+      }
+      p += m.len;
+    }
+  }
+}
+async function pagesRecs(files) {
+  if (files.has('Index.zip')) (await unzip(files.get('Index.zip').slice().buffer, n => /\.iwa$/.test(n))).forEach((v, k) => files.set(k, v));
+  const names = Array.from(files.keys()).filter(n => /\.iwa$/.test(n)).sort((a, b) => (/Document\.iwa$/.test(b) ? 1 : 0) - (/Document\.iwa$/.test(a) ? 1 : 0));
+  if (!names.length) throw userErr('That Pages file is in an older format. In Pages, choose File, Export To, Word, then open the .docx here.');
+  const found = [];
+  for (const n of names) { try { iwaStorages(iwaBytes(files.get(n)), found); } catch (e) { /* skip an archive we cannot read */ } }
+  const real = found.filter(s => s.text.trim()), bodies = real.filter(s => s.kind === 0);
+  const pick = bodies.length ? bodies : real.sort((a, b) => b.text.length - a.text.length).slice(0, 1);
+  const text = pick.map(s => s.text).join('\n').replace(/[\u2028\u2029\u000b\u000c\u0004\u0005]/g, '\n').replace(/[\ufffc\ufeff\u0000-\u0008\u000e-\u001f]/g, '');
+  const recs = []; let gap = true;
+  for (const line of text.split('\n')) {
+    const lead = (line.match(/^[\t ]*/) || [''])[0], x = line.trim();
+    if (!x) { gap = true; continue; }
+    const tabs = (lead.match(/\t/g) || []).length;
+    recs.push({x: x.replace(/\t+/g, ' '), ind: tabs * 0.5 + (lead.length - tabs) * 0.08, al: '', st: '', gap}); gap = false;
+  }
+  return {recs, title: {}};
+}
+
+/* ---- putting an opened file on the page ---- */
+function swapProject(np, label) {
+  const prev = projectJSON(), wasSample = P.sample;
+  loadProject(np); touch();
+  stage.scrollTop = scriptTop();
+  toast(label, {label: 'Undo', run() { loadProject(prev); if (wasSample) { clearTimeout(saveT); store.set(KEY, null); } else touch(); stage.scrollTop = scriptTop(); }});
+}
+async function openFile(f) {
+  if (!f) return;
+  const name = f.name || 'file', ext = (name.match(/\.([a-z0-9]+)$/i) || ['', ''])[1].toLowerCase(), stem = name.replace(/\.[^.]+$/, '').replace(/\.(fountain|cuemark)$/i, '');
+  let got = null;
+  try {
+    const buf = await f.arrayBuffer(), u = new Uint8Array(buf);
+    if (u[0] === 0xd0 && u[1] === 0xcf && u[2] === 0x11 && u[3] === 0xe0) throw userErr('That is an older Word file (.doc). In Word, save it as .docx, then open that.');
+    if (u[0] === 0x50 && u[1] === 0x4b) {
+      if (typeof DecompressionStream === 'undefined') throw userErr('This browser cannot unpack Word or Pages files. Try a current Chrome, Edge, Safari or Firefox.');
+      const files = await unzip(buf, n => n === 'word/document.xml' || n === 'word/styles.xml' || /^Index\/.*\.iwa$/.test(n) || n === 'Index.zip');
+      if (files.has('word/document.xml')) got = docxRecs(files);
+      else if (ext === 'pages' || files.size) got = await pagesRecs(files);
+      else throw userErr('That file is not a Word or Pages document.');
+    } else {
+      let txt = u[0] === 0xff && u[1] === 0xfe ? new TextDecoder('utf-16le').decode(u) : u[0] === 0xfe && u[1] === 0xff ? new TextDecoder('utf-16be').decode(u) : new TextDecoder().decode(u);
+      if ((txt.match(/\ufffd/g) || []).length > 3) txt = new TextDecoder('windows-1252').decode(u);
+      txt = txt.replace(/^\ufeff/, '');
+      if (/^\s*\{\\rtf/.test(txt)) throw userErr('That is an RTF file. Save it as .docx or plain text, then open that.');
+      let p = null; try { p = JSON.parse(txt); } catch (e) { p = null; }
+      if (p && Array.isArray(p.blocks)) { p.sample = false; return swapProject(p, 'Opened ' + name + '.'); }
+      if (p && typeof p === 'object') throw userErr('That file is not a CueMark project.');
+      got = textRecs(txt);
+    }
+  } catch (e) { return toast(e && e.user ? e.message : 'CueMark could not read that file.'); }
+  const res = autoFormat(got.recs, {title: got.title});
+  if (!res.blocks.length) return toast('No script text was found in that file.');
+  const np = blank(res.format); np.blocks = res.blocks;
+  np.title.title = res.title.title || stem;
+  for (const k of ['author', 'credit', 'based', 'draft', 'contact']) if (res.title[k]) np.title[k] = res.title[k];
+  const said = new Map();                                                        // anyone who speaks twice or more joins the cast
+  for (const b of res.blocks) if (b.t === 'character') { const n = cueName(b.x); if (n) said.set(n, (said.get(n) || 0) + 1); }
+  said.forEach((n, who) => { if (n >= 2 && np.cast.length < 40) np.cast.push({id: rid(), name: titleCase(who), desc: '', aliases: '', color: nextColor(np.cast)}); });
+  swapProject(np, `Opened ${name}: ${plural(res.blocks.length, 'line')} formatted` + (np.cast.length ? `, ${plural(np.cast.length, 'character')} tagged.` : '.'));
+}
+$('#file').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; openFile(f); });
+$('#b-open').addEventListener('click', () => $('#file').click());
+window.addEventListener('dragover', e => { if (e.dataTransfer && Array.from(e.dataTransfer.types || []).indexOf('Files') >= 0) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; } });
+window.addEventListener('drop', e => { const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if (f) { e.preventDefault(); openFile(f); } });
 /* ---------- saving ---------- */
 const KEY = 'cuemark.project.v1';
 const cloud = {on: false, col: null, parts: [], busy: false, due: false, last: 0, t: 0};
@@ -2068,6 +2395,7 @@ document.addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
   if (k === 's') { e.preventDefault(); saveLocal(); if (cloud.on) cloudLater(0); toast(P.sample ? 'This is the example script. Your own work saves as you type.' : 'Your script saves as you type.'); }
   else if (k === 'e' && e.shiftKey) { e.preventDefault(); $('#b-export').click(); }
+  else if (k === 'o' && !e.shiftKey && !e.altKey) { e.preventDefault(); $('#file').click(); }
 });
 
 /* ---------- start ---------- */

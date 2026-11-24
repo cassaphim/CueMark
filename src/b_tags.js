@@ -22,7 +22,7 @@ function buildMatchers() {
   const keys = Array.from(M.by.keys());
   if (!keys.length) { M.ci = M.cs = null; return; }
   const rx = s => s.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&');
-  const cjk = /[぀-ヿ㐀-鿿가-힯]/;
+  const cjk = /[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]/;
   const pat = s => cjk.test(s) ? rx(s) : '(?<![\\p{L}\\p{N}])' + rx(s) + '(?![\\p{L}\\p{N}])';
   const byLen = (a, b) => b.length - a.length;
   M.ci = new RegExp(keys.slice().sort(byLen).map(pat).join('|'), 'giu');
@@ -97,11 +97,12 @@ function rebuildTags(now) {
 }
 function retagSoon() { clearTimeout(retagT); retagT = setTimeout(() => rebuildTags(true), 180); }
 
-function nextColor() {
-  const used = new Set(P.cast.map(c => String(c.color).toLowerCase()));
+function nextColor(cast) {
+  cast = cast || P.cast;
+  const used = new Set(cast.map(c => String(c.color).toLowerCase()));
   const free = PALETTE.find(p => !used.has(p));
   if (free) return free;
-  const h = (P.cast.length * 137.508) % 360, s = .62, l = .5;       // past the palette: walk the hue wheel by the golden angle
+  const h = (cast.length * 137.508) % 360, s = .62, l = .5;       // past the palette: walk the hue wheel by the golden angle
   const f = n => { const k = (n + h / 30) % 12, a = s * Math.min(l, 1 - l); return Math.round(255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)))).toString(16).padStart(2, '0'); };
   return '#' + f(0) + f(8) + f(4);
 }

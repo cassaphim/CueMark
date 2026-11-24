@@ -40,6 +40,8 @@ h2,h3,p{margin:0}
 .bar{grid-area:bar;display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--rule);min-width:0}
 .mark{font:700 17px/1 var(--type);margin:0 8px 0 4px;white-space:nowrap}
 .mark::after{content:"";display:inline-block;width:.42em;height:.42em;border-radius:50%;background:currentColor;vertical-align:.6em;margin-left:.12em}
+.ver{border:0;background:none;border-radius:5px;padding:2px 6px;margin:0 4px 0 -8px;color:var(--ink-3);font:500 12.5px/1.4 var(--ui-c);font-variant-numeric:tabular-nums;cursor:pointer}
+.ver:hover{background:var(--hover);color:var(--ink)}
 .doc{max-width:30ch;overflow:hidden;text-overflow:ellipsis;color:var(--ink-2)}
 .grow{flex:1 1 0;min-width:0}
 .btn{display:inline-flex;align-items:center;gap:7px;border:1px solid transparent;border-radius:7px;background:none;padding:6px 10px;line-height:1.2;cursor:pointer;white-space:nowrap}
@@ -259,6 +261,11 @@ dialog::backdrop{background:rgb(10 12 14/.45)}
 .ck{display:flex;align-items:flex-start;gap:8px;cursor:pointer;line-height:1.35}
 .ck input{margin:2px 0 0;accent-color:var(--ink)}
 .ck small{display:block;color:var(--ink-2);font-size:12.5px}
+.verlist{display:flex;flex-direction:column;gap:16px;max-height:min(56vh,440px);overflow:auto;padding-right:4px}
+.verlist h3{display:flex;align-items:baseline;gap:10px;margin:0 0 4px;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+.verlist h3 span{font-weight:400;font-size:12.5px;color:var(--ink-2)}
+.verlist h3 em{font-style:normal;font-weight:500;font-size:11.5px;border:1px solid var(--rule-2);border-radius:999px;padding:0 7px}
+.verlist ul{margin:0;padding-left:18px;color:var(--ink-2);line-height:1.5}
 .keys{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:13.5px;margin:0}
 .keys dt{font-weight:500;white-space:nowrap}
 .keys dd{margin:0;color:var(--ink-2)}
@@ -282,12 +289,12 @@ pre.pg u{text-decoration-thickness:1px;text-underline-offset:.12em}
   #app,#app.no-side{grid-template-columns:0 minmax(0,1fr)}
   .side,#app.no-side .side{display:flex;position:fixed;top:49px;bottom:0;left:0;width:min(300px,86vw);z-index:40;box-shadow:var(--shadow);transform:translateX(-104%);transition:transform .16s}
   #app.drawer .side{transform:none}
-  #fmt{display:none}
+  #fmt,#b-open{display:none}
   .status .next{display:none}
   #b-el{min-width:0}
 }
 @media (max-width:640px){
-  .mark,.switch span,#b-undo,#b-redo,#st-words,#st-time,.zoom{display:none}
+  .mark,.ver,.switch span,#b-undo,#b-redo,#st-words,#st-time,.zoom{display:none}
   .bar{padding:8px}
   .stage{padding:12px 8px 80px;font-size:14px!important}
   .dock{top:-12px;left:-8px;margin:-12px -8px 10px;padding:6px 8px;font-size:13px}

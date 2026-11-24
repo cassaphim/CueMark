@@ -2,6 +2,7 @@
   <header class="bar">
     <button class="btn icon" id="b-side" type="button" aria-label="Show or hide the index" title="Index"><svg viewBox="0 0 16 16"><rect x="1.75" y="2.75" width="12.5" height="10.5" rx="2"/><path d="M6 2.75v10.5"/></svg></button>
     <span class="mark">cuemark</span>
+    <button class="ver" id="b-ver" type="button" title="Version history"></button>
     <button class="btn doc" id="b-title" type="button" title="Go to the title page"><span id="doc-name">Untitled script</span></button>
     <span class="grow"></span>
     <div class="seg" id="fmt" role="group" aria-label="Script format">
@@ -12,6 +13,7 @@
     <button class="btn icon keep" id="b-undo" type="button" aria-label="Undo" title="Undo"><svg viewBox="0 0 16 16"><path d="M5.5 2.75 2.5 5.75l3 3M2.5 5.75h6.75a3.75 3.75 0 0 1 0 7.5H7"/></svg></button>
     <button class="btn icon keep" id="b-redo" type="button" aria-label="Redo" title="Redo"><svg viewBox="0 0 16 16"><path d="m10.5 2.75 3 3-3 3M13.5 5.75H6.75a3.75 3.75 0 0 0 0 7.5H9"/></svg></button>
     <label class="switch" title="Show or hide character colors"><input type="checkbox" id="tags" checked><span>Tags</span></label>
+    <button class="btn line" id="b-open" type="button" title="Open a text, Word, Pages or project file">Open</button>
     <button class="btn solid" id="b-export" type="button">Export</button>
     <button class="btn icon" id="b-more" type="button" aria-haspopup="menu" aria-label="More" title="More"><svg viewBox="0 0 16 16"><path d="M3.5 8h.01M8 8h.01M12.5 8h.01" stroke-width="2.4"/></svg></button>
   </header>
@@ -87,7 +89,7 @@
 <div class="ac" id="ac" hidden></div>
 <div class="tip" id="tip" hidden></div>
 <div class="toast" id="toast" role="status" hidden></div>
-<input type="file" id="file" accept=".json,.txt,.fountain,application/json,text/plain" hidden>
+<input type="file" id="file" accept=".txt,.fountain,.docx,.pages,.json,.md,text/plain,application/json,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.apple.pages" hidden>
 
 <dialog id="dlg-export" aria-labelledby="ex-h">
   <div class="ex">
@@ -132,6 +134,7 @@
   <div class="dlg">
     <h2 id="keys-h">Writing shortcuts</h2>
     <dl class="keys">
+      <dt><span class="mod-key">Ctrl</span> + O</dt><dd>Open a text, Word, Pages or project file. Dropping a file on the window works too</dd>
       <dt>Right-click</dt><dd>Add a new element, or change what the current line is</dd>
       <dt>Enter</dt><dd>Start the element that usually comes next</dd>
       <dt>Tab</dt><dd>Switch an empty line, or add the usual alternative</dd>
@@ -143,6 +146,14 @@
       <dt>Shift + right-click</dt><dd>The browser's own menu, with spelling suggestions</dd>
     </dl>
     <div class="row"><button class="btn solid" type="button" id="keys-close">Done</button></div>
+  </div>
+</dialog>
+
+<dialog id="dlg-ver" aria-labelledby="ver-h">
+  <div class="dlg">
+    <h2 id="ver-h">Version history</h2>
+    <div class="verlist" id="ver-list"></div>
+    <div class="row"><button class="btn solid" type="button" id="ver-close">Done</button></div>
   </div>
 </dialog>
 

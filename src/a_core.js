@@ -2,14 +2,25 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const SELF = (() => {
   try {
-    const mine = ['app', 'menu', 'ac', 'tip', 'toast', 'file', 'dlg-export', 'dlg-new', 'dlg-keys', 'printroot'];
+    const mine = ['app', 'menu', 'ac', 'tip', 'toast', 'file', 'dlg-export', 'dlg-new', 'dlg-keys', 'dlg-ver', 'printroot'];   // every top-level element in body.html
     const head = Array.from(document.head.children).filter(n => n.tagName === 'META' || n.tagName === 'TITLE' || (n.tagName === 'LINK' && /fonts\.g/.test(n.href || ''))).map(n => n.outerHTML).join('\n');
-    return {head, css: $('#appcss').textContent, body: mine.map(id => document.getElementById(id).outerHTML).join('\n'), js: document.currentScript.textContent};
+    return {head, css: $('#appcss').textContent, body: mine.map(id => document.getElementById(id).outerHTML).join('\n'), log: document.getElementById('changelog').outerHTML, js: document.currentScript.textContent};
   } catch (e) { return null; }
 })();
+/* Versions: CHANGELOG.md is embedded in the page; its first "## x.y.z (date)" heading is the version running now. */
+const LOG = (() => {
+  const out = []; let cur = null;
+  for (const line of ($('#changelog') ? $('#changelog').textContent : '').split('\n')) {
+    const h = line.match(/^##\s+v?(\d[\d.]*)\s*(?:\((.*?)\))?/);
+    if (h) { cur = {v: h[1], date: h[2] || '', items: []}; out.push(cur); }
+    else if (cur && /^\s*[-*]\s+/.test(line)) cur.items.push(line.replace(/^\s*[-*]\s+/, ''));
+  }
+  return out;
+})();
+const VERSION = LOG.length ? LOG[0].v : '0';
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
 const rid = () => Math.random().toString(36).slice(2, 9);
-const clean = s => String(s == null ? '' : s).replace(/ /g, ' ').replace(/\s*[\r\n]+\s*/g, ' ');
+const clean = s => String(s == null ? '' : s).replace(/\u00a0/g, ' ').replace(/\s*[\r\n]+\s*/g, ' ');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
 const hosted = () => !!(window.claude && typeof window.claude.use === 'function');

@@ -204,7 +204,7 @@ function fixRoot() {
 }
 function tidy(el) {
   const f = el.firstChild; if (!f) return;
-  if (f === el.lastChild && f.nodeType === 3 && !/[\n ]/.test(f.data)) return;
+  if (f === el.lastChild && f.nodeType === 3 && !/[\n\u00a0]/.test(f.data)) return;
   const s = getSelection(); let off = -1;
   if (s.rangeCount && el.contains(s.focusNode)) { const p = point(s.focusNode, s.focusOffset); if (p) off = p.off; }
   const x = clean(el.textContent); el.textContent = x;

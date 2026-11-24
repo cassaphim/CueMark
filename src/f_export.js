@@ -230,7 +230,7 @@ function makePDF(pages, meta) {
   }
   objs[0] = '<< /Type /Catalog /Pages 2 0 R >>';
   objs[1] = `<< /Type /Pages /Kids [${kids.map(k => k + ' 0 R').join(' ')}] /Count ${kids.length} >>`;
-  const info = add(`<< /Title (${pdfStr(meta.title)}) /Author (${pdfStr(meta.author)}) /Creator (CueMark) >>`);
+  const info = add(`<< /Title (${pdfStr(meta.title)}) /Author (${pdfStr(meta.author)}) /Creator (CueMark ${VERSION}) >>`);
   let out = '%PDF-1.4\n'; const offs = [];
   objs.forEach((o, i) => { offs.push(out.length); out += `${i + 1} 0 obj\n${o}\nendobj\n`; });
   const xref = out.length;
@@ -279,48 +279,6 @@ function flowText(blocks) {
 }
 function scriptText() { const b = H.stack[H.i].b; return P.format === 'film' ? fountain(b) : flowText(b); }
 
-/* Read pasted or opened text into formatted lines. */
-function parseText(txt, fk) {
-  const lines = String(txt).replace(/\r\n?/g, '\n').split('\n'), out = [];
-  const push = (t, x) => { x = clean(x).trim(); if (x) out.push({t, x}); };
-  const caps = s => /[A-Z]/.test(s) && !/[a-z]/.test(s.replace(/\(.*?\)/g, ''));
-  if (fk === 'stage') {
-    let open = false;
-    for (let i = 0; i < lines.length; i++) {
-      const s = lines[i].trim(), last = out[out.length - 1];
-      if (!s) { open = false; continue; }
-      if (/^act\b/i.test(s) && s.length < 24) push('act', s);
-      else if (/^scene\b/i.test(s) && s.length < 24) push('scene', s);
-      else if (/^setting:/i.test(s)) push('setting', s.slice(8));
-      else if (/^at rise:/i.test(s)) push('atrise', s.slice(8));
-      else if (/^\(.*\)$/.test(s)) push(last && last.t === 'character' ? 'paren' : 'direction', s.slice(1, -1));
-      else if (caps(s) && s.length < 40) push('character', s);
-      else if (open && last && last.t === 'dialogue') { last.x += ' ' + s; continue; }
-      else { push('dialogue', s); open = true; continue; }
-      open = false;
-    }
-    return out;
-  }
-  let i = 0, inDlg = false, buf = [];
-  if (/^(title|credit|author|authors|source|draft date|contact|copyright)\s*:/i.test(lines[0] || '')) while (i < lines.length && lines[i].trim()) i++;
-  const flush = () => { if (buf.length) { push('action', buf.join(' ')); buf = []; } };
-  for (; i < lines.length; i++) {
-    const s = lines[i].trim(), prevBlank = i === 0 || !lines[i - 1].trim(), nextFull = !!(lines[i + 1] || '').trim(), last = out[out.length - 1];
-    if (!s) { flush(); inDlg = false; continue; }
-    if (inDlg) { if (/^\(.*\)$/.test(s)) push('paren', s.slice(1, -1)); else if (last && last.t === 'dialogue') last.x += ' ' + s; else push('dialogue', s); continue; }
-    const note = s.match(/^\[\[(.*)\]\]$/);
-    if (note) { flush(); push('note', note[1]); }
-    else if (prevBlank && /^(INT|EXT|EST|I\/E|INT\.?\/EXT\.?)[. ]/i.test(s)) { flush(); push('scene', s); }
-    else if (prevBlank && /^\.[^.]/.test(s)) { flush(); push('scene', s.slice(1)); }
-    else if (/^>/.test(s) && !/<$/.test(s)) { flush(); push('transition', s.slice(1)); }
-    else if (prevBlank && !nextFull && caps(s) && (/TO:$/.test(s) || /^FADE (IN|OUT|TO BLACK)[.:]?$/.test(s))) { flush(); push('transition', s); }
-    else if (prevBlank && nextFull && !/^!/.test(s) && (/^@/.test(s) || (caps(s) && s.length < 45))) { flush(); push('character', s.replace(/^@/, '').replace(/\s*\^$/, '')); inDlg = true; }
-    else buf.push(s.replace(/^!/, ''));
-  }
-  flush();
-  return out;
-}
-
 /* ---------- saving files ---------- */
 let DL = null, dlAsked = null;
 const downloads = () => dlAsked || (dlAsked = cap('downloads').then(d => (DL = d)));
@@ -341,34 +299,20 @@ async function saveFile(name, data, mime) {
   setTimeout(() => URL.revokeObjectURL(url), 4000);
   toast('Saved ' + name + '.');
 }
-function projectJSON() { return Object.assign({}, P, {app: 'cuemark', blocks: H.stack[H.i].b.map(b => ({t: b.t, x: b.x}))}); }
+function projectJSON() { return Object.assign({}, P, {app: 'cuemark', appVersion: VERSION, blocks: H.stack[H.i].b.map(b => ({t: b.t, x: b.x}))}); }
 function saveProjectFile() { saveFile(fileStem() + '.cuemark.json', JSON.stringify(projectJSON(), null, 1), 'application/json'); }
-$('#file').addEventListener('change', async e => {
-  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
-  let txt = ''; try { txt = await f.text(); } catch (err) { return toast('That file could not be read.'); }
-  let p = null; try { p = JSON.parse(txt); } catch (err) { p = null; }
-  if (p && Array.isArray(p.blocks)) { p.sample = false; p.updatedAt = Date.now(); loadProject(p); touch(); return toast('Opened ' + f.name + '.'); }
-  if (p) return toast('That file is not a CueMark project.');
-  const blocks = parseText(txt, 'film');
-  if (!blocks.length) return toast('No script text was found in that file.');
-  const np = blank('film'); np.blocks = blocks; np.title.title = f.name.replace(/\.[^.]+$/, '').replace(/\.fountain$/i, '');
-  const m = txt.match(/^title:\s*(.+)$/im), a = txt.match(/^authors?:\s*(.+)$/im);
-  if (m) np.title.title = m[1].trim(); if (a) np.title.author = a[1].trim();
-  loadProject(np); touch(); toast('Opened ' + f.name + ' as a screenplay.');
-});
-
 /* ---------- the two pinned downloads ---------- */
 async function appSource() {
   if (!hosted() && /^https?:$/.test(location.protocol)) {             // on a web host, hand over the exact file being served
     try { const r = await fetch(location.href.split(/[?#]/)[0], {cache: 'no-store'}); const t = r.ok ? await r.text() : ''; if (t.indexOf('id="appcss"') > 0) return t; } catch (e) { /* fall through to the copy taken at load */ }
   }
   if (!SELF) return '';
-  return '<!DOCTYPE html>\n<html lang="en">\n<head>\n' + SELF.head + '\n<style id="appcss">' + SELF.css + '</style>\n<style id="tagcss"></style>\n</head>\n<body>\n' + SELF.body + '\n<script>' + SELF.js + '<\/script>\n</body>\n</html>\n';
+  return '<!DOCTYPE html>\n<html lang="en">\n<head>\n' + SELF.head + '\n<style id="appcss">' + SELF.css + '</style>\n<style id="tagcss"></style>\n</head>\n<body>\n' + SELF.body + '\n' + SELF.log + '\n<script>' + SELF.js + '<\/script>\n</body>\n</html>\n';
 }
 $('#b-dl-app').addEventListener('click', async () => {
   const src = await appSource();
   if (!src) return toast('The app file could not be put together here.');
-  saveFile('CueMark.html', src, 'text/html');
+  saveFile('CueMark-' + VERSION + '.html', src, 'text/html');
 });
 $('#b-dl-script').addEventListener('click', () => {
   const pages = allPages($('#ex-title').checked, $('#ex-cast').checked);
